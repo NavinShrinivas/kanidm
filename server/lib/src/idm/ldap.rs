@@ -449,7 +449,7 @@ impl LdapServer {
         idm_auth.auth_ldap(&lae, ct).await.and_then(|r| {
             idm_auth.commit().map(|_| {
                 if r.is_some() {
-                    security_info!(%dn, "✅ LDAP Bind success pw");
+                    security_info!(%dn, "✅ LDAP Bind (password) success");
                 } else {
                     security_info!(%dn, "❌ LDAP Bind failure");
                 };
@@ -642,6 +642,22 @@ mod tests {
         let pce = UnixPasswordChangeEvent::new_internal(UUID_ADMIN, TEST_PASSWORD);
 
         assert!(idms_prox_write.set_unix_account_password(&pce).is_ok());
+
+        // Writing test for optional use of POSIX password for bind
+        // Empty UNIX_PW bind, should allow : 
+        let admin_t = ldaps
+            .do_bind(idms, "admin", TEST_PASSWORD)
+            .await
+            .unwrap()
+            .unwrap();
+        assert!(admin_t.effective_session == LdapSession::UnixBind(UUID_ADMIN));
+        let admin_t = ldaps
+            .do_bind(idms, "admin@example.com", TEST_PASSWORD)
+            .await
+            .unwrap()
+            .unwrap();
+        assert!(admin_t.effective_session == LdapSession::UnixBind(UUID_ADMIN));
+        // Setting UNIX_PW to false:
         let allow_unix_pw_flag = ModifyEvent::new_internal_invalid(
             filter!(f_eq(Attribute::Uuid, PartialValue::Uuid(UUID_DOMAIN_INFO))),
             ModifyList::new_purge_and_set(Attribute::DomainLdapAllowUnixPwBind, Value::Bool(false)),
@@ -653,11 +669,6 @@ mod tests {
         assert!(
             ldaps.do_bind(idms, "", "test").await.unwrap_err() == OperationError::NotAuthenticated
         );
-
-        // Now test the admin and various DN's
-
-        // Writing test for optional use of POSIX password for bind
-        // NOT ALLOWING UNIX_PW FOR BIND :
         let admin_t = ldaps.do_bind(idms, "admin", TEST_PASSWORD).await.unwrap(); // Cannot unwrap futher as on disallowed unix_pw_bind it will return Ok(None)
         assert!(admin_t.is_none() == true);
 
