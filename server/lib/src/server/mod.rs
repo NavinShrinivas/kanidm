@@ -1113,7 +1113,11 @@ impl QueryServer {
             // we set the domain_display_name to the configuration file's domain_name
             // here because the database is not started, so we cannot pull it from there.
             d_display: domain_name,
+<<<<<<< HEAD
             d_ldap_allow_unix_pw_bind : true
+=======
+            d_ldap_allow_unix_pw_bind: false,
+>>>>>>> 2b7dcdd6c6e3d566139aeefbdfc7c10d3ac1c3bd
         }));
 
         let dyngroup_cache = Arc::new(CowCell::new(DynGroupCache::default()));
@@ -1513,7 +1517,13 @@ impl<'a> QueryServerWriteTransaction<'a> {
         let domain_name = self.get_db_domain_name()?;
         let display_name = self.get_db_domain_display_name()?;
         let domain_ldap_allow_unix_pw_bind = match self.get_domain_ldap_allow_unix_pw_bind() {
+<<<<<<< HEAD
             Ok(v) => v,
+=======
+            Ok(v) => {
+                v
+            },
+>>>>>>> 2b7dcdd6c6e3d566139aeefbdfc7c10d3ac1c3bd
             _ => {
                 admin_warn!("Defaulting ldap_allow_unix_pw_bind to true");
                 info!("Defaulting ldap_allow_unix_pw_bind to true");
@@ -1536,7 +1546,13 @@ impl<'a> QueryServerWriteTransaction<'a> {
         info!("here : {}", domain_ldap_allow_unix_pw_bind);
         let domain_uuid = self.be_txn.get_db_d_uuid();
         let mut_d_info = self.d_info.get_mut();
+<<<<<<< HEAD
         mut_d_info.d_ldap_allow_unix_pw_bind = domain_ldap_allow_unix_pw_bind;
+=======
+        if mut_d_info.d_ldap_allow_unix_pw_bind != domain_ldap_allow_unix_pw_bind {
+            mut_d_info.d_ldap_allow_unix_pw_bind = domain_ldap_allow_unix_pw_bind;
+        }
+>>>>>>> 2b7dcdd6c6e3d566139aeefbdfc7c10d3ac1c3bd
         if mut_d_info.d_uuid != domain_uuid {
             admin_warn!(
                 "Using domain uuid from the database {} - was {} in memory",
@@ -1572,6 +1588,10 @@ impl<'a> QueryServerWriteTransaction<'a> {
         let filt = filter_all!(f_eq(Attribute::Uuid, udi));
         self.internal_modify(&filt, &modl)
     }
+<<<<<<< HEAD
+=======
+
+>>>>>>> 2b7dcdd6c6e3d566139aeefbdfc7c10d3ac1c3bd
     /// Initiate a domain rename process. This is generally an internal function but it's
     /// exposed to the cli for admins to be able to initiate the process.
     ///

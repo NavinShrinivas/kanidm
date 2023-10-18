@@ -641,6 +641,7 @@ mod tests {
 
         let pce = UnixPasswordChangeEvent::new_internal(UUID_ADMIN, TEST_PASSWORD);
 
+<<<<<<< HEAD
         assert!(idms_prox_write.set_unix_account_password(&pce).is_ok());
         assert!(idms_prox_write.commit().is_ok()); // Committing all configs
 
@@ -661,6 +662,8 @@ mod tests {
 
         // Setting UNIX_PW to false:
         let mut idms_prox_write = idms.proxy_write(duration_from_epoch_now()).await;
+=======
+>>>>>>> 2b7dcdd6c6e3d566139aeefbdfc7c10d3ac1c3bd
         let allow_unix_pw_flag = ModifyEvent::new_internal_invalid(
             filter!(f_eq(Attribute::Uuid, PartialValue::Uuid(UUID_DOMAIN_INFO))),
             ModifyList::new_purge_and_set(Attribute::DomainLdapAllowUnixPwBind, Value::Bool(false)),
@@ -673,8 +676,19 @@ mod tests {
         assert!(
             ldaps.do_bind(idms, "", "test").await.unwrap_err() == OperationError::NotAuthenticated
         );
+<<<<<<< HEAD
         let admin_t = ldaps.do_bind(idms, "admin", TEST_PASSWORD).await; 
         assert!(admin_t.unwrap().is_none() == true);
+=======
+
+        // Now test the admin and various DN's
+
+
+        // Writing test for optional use of POSIX password for bind
+        // NOT ALLOWING UNIX_PW FOR BIND :
+        let admin_t = ldaps.do_bind(idms, "admin", TEST_PASSWORD).await.unwrap(); // Cannot unwrap futher as on disallowed unix_pw_bind it will return Ok(None)
+        assert!(admin_t.is_none() == true);
+>>>>>>> 2b7dcdd6c6e3d566139aeefbdfc7c10d3ac1c3bd
 
         // ALLOWING UNIX_PW FOR BIND :
         let mut idms_prox_write = idms.proxy_write(duration_from_epoch_now()).await;
@@ -685,8 +699,11 @@ mod tests {
         assert!(idms_prox_write.qs_write.modify(&allow_unix_pw_flag).is_ok());
         assert!(idms_prox_write.commit().is_ok());
 
+<<<<<<< HEAD
         // Now test the admin and various DN's
         // Writing test for optional use of POSIX password for bind
+=======
+>>>>>>> 2b7dcdd6c6e3d566139aeefbdfc7c10d3ac1c3bd
         let admin_t = ldaps
             .do_bind(idms, "admin", TEST_PASSWORD)
             .await
