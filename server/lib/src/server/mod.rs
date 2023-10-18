@@ -798,7 +798,8 @@ pub trait QueryServerTransaction<'a> {
         let res = self.internal_search_uuid(UUID_DOMAIN_INFO)?;
         match res.get_ava_single(Attribute::DomainLdapAllowUnixPwBind)
         {
-            Some(v) => Ok(v.to_bool().is_some()),
+            Some(v) => Ok(v.to_bool().unwrap_or(true)), // If typecasting Value to bool gives error
+                                                        // we default to true
             None => Ok(true),
         }
     }
@@ -1112,7 +1113,7 @@ impl QueryServer {
             // we set the domain_display_name to the configuration file's domain_name
             // here because the database is not started, so we cannot pull it from there.
             d_display: domain_name,
-            d_ldap_allow_unix_pw_bind: false,
+            d_ldap_allow_unix_pw_bind : true
         }));
 
         let dyngroup_cache = Arc::new(CowCell::new(DynGroupCache::default()));
@@ -1515,6 +1516,7 @@ impl<'a> QueryServerWriteTransaction<'a> {
             Ok(v) => v,
             _ => {
                 admin_warn!("Defaulting ldap_allow_unix_pw_bind to true");
+                info!("Defaulting ldap_allow_unix_pw_bind to true");
 
                 // let modl = ModifyList::new_purge_and_set(
                 //     Attribute::DomainLdapAllowUnixPwBind,
@@ -1531,6 +1533,7 @@ impl<'a> QueryServerWriteTransaction<'a> {
                 true
             }
         };
+        info!("here : {}", domain_ldap_allow_unix_pw_bind);
         let domain_uuid = self.be_txn.get_db_d_uuid();
         let mut_d_info = self.d_info.get_mut();
         mut_d_info.d_ldap_allow_unix_pw_bind = domain_ldap_allow_unix_pw_bind;
@@ -1646,6 +1649,7 @@ impl<'a> QueryServerWriteTransaction<'a> {
         }
 
         if self.changed_domain {
+            info!("herer : reloading domain info");
             self.reload_domain_info()?;
         }
 
@@ -1661,7 +1665,7 @@ impl<'a> QueryServerWriteTransaction<'a> {
     #[instrument(level = "info", skip_all)]
     pub fn commit(mut self) -> Result<(), OperationError> {
         self.reload()?;
-
+        info!("here : commiting qs_write");
         // Now destructure the transaction ready to reset it.
         let QueryServerWriteTransaction {
             committed,
